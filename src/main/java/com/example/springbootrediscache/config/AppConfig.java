@@ -1,6 +1,7 @@
 package com.example.springbootrediscache.config;
 
 import com.example.springbootrediscache.model.Product;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -10,17 +11,20 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
+@RequiredArgsConstructor
 public class AppConfig {
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
-    }
+    private final RedisConnectionFactory redisConnectionFactory;
+
+//    @Bean
+//    public RedisConnectionFactory redisConnectionFactory() {
+//        return new LettuceConnectionFactory();
+//    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(){
         RedisTemplate<String, Object> productRedisTemplate = new RedisTemplate<>();
-        productRedisTemplate.setConnectionFactory(redisConnectionFactory());
+        productRedisTemplate.setConnectionFactory(redisConnectionFactory);
 //        productRedisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
 //        productRedisTemplate.setKeySerializer(new StringRedisSerializer());
 //        productRedisTemplate.setHashKeySerializer(new GenericJackson2JsonRedisSerializer());

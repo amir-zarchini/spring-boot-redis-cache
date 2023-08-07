@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,7 @@ public class ProductService {
             return cachedData;
         } else {
             List<Product> dataFromDatabase = productRepository.findAll();
-            redisTemplate.opsForValue().set(cacheKey, dataFromDatabase);
+            redisTemplate.opsForValue().set(cacheKey, dataFromDatabase, 1 , TimeUnit.MINUTES);
             return dataFromDatabase;
         }
 
@@ -71,14 +72,28 @@ public class ProductService {
                     .findFirst();
         } else {
             Optional<Product> entityFromDatabase = productRepository.findById(id);
-            entityFromDatabase.ifPresent(entity -> redisTemplate.opsForValue().set(cacheKey, List.of(entity)));
+            entityFromDatabase.ifPresent(entity -> redisTemplate
+                    .opsForValue()
+                    .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
             return entityFromDatabase;
         }
 //        return productRepository.findById(id).orElse(null);
     }
 
-    public Product getProductByName(String name) {
-        return productRepository.findByName(name);
+    public Optional<Product> getProductByName(String name) {
+        String cacheKey = "Product";
+        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedData != null) {
+            return cachedData.stream()
+                    .filter(entity -> entity.getName().equals(name))
+                    .findFirst();
+        } else {
+            Optional<Product> entityFromDatabase = Optional.ofNullable(productRepository.findByName(name));
+            entityFromDatabase.ifPresent(entity -> redisTemplate.opsForValue()
+                    .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
+            return entityFromDatabase;
+        }
+//        return productRepository.findByName(name);
     }
 
     @CacheEvict(value="Product", key="#id")
