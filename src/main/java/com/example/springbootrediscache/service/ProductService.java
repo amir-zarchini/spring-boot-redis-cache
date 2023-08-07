@@ -16,11 +16,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ProductService {
 
-//    @Resource(name="redisTemplate")
-//    private HashOperations<String, Integer, Product> hashOperations;
-
     private final RedisTemplate<String, Object> redisTemplate;
-
     private final ProductRepository productRepository;
     private final String cacheKey = "Product";
 
@@ -32,11 +28,7 @@ public class ProductService {
         return productRepository.saveAll(products);
     }
 
-//    @Cacheable()
-//    @CollectionCacheable
     public List<Product> getProducts() {
-
-//        String cacheKey = "Product";
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             return cachedData;
@@ -45,26 +37,9 @@ public class ProductService {
             redisTemplate.opsForValue().set(cacheKey, dataFromDatabase, 1 , TimeUnit.MINUTES);
             return dataFromDatabase;
         }
-
-//        template.opsForHash().values(hashReference);
-//        hashOperations.entries(hashReference);
-//        RedisTemplate.opsForList().leftPushAll()
-//        return productRepository.findAll();
     }
 
-//    @Override
-//    @Cacheable(value = "usersList", key = "#page")
-//    public List<User> allUsers(Integer page) {
-//        Page<User> users = userRepo.findAll(PageRequest.of(--page, 5));
-//        if (users.isEmpty()) {
-//            throw new CustomException("Users not found", 400);
-//        }
-//        return users.getContent();
-//    }
-
-//    @Cacheable(value="Product", key="#id")
     public Optional<Product> getProductById(int id) {
-//        String cacheKey = "Product";
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             return cachedData.stream()
@@ -77,11 +52,9 @@ public class ProductService {
                     .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
             return entityFromDatabase;
         }
-//        return productRepository.findById(id).orElse(null);
     }
 
     public Optional<Product> getProductByName(String name) {
-//        String cacheKey = "Product";
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             return cachedData.stream()
@@ -93,12 +66,9 @@ public class ProductService {
                     .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
             return entityFromDatabase;
         }
-//        return productRepository.findByName(name);
     }
 
-//    @CacheEvict(value="Product", key="#id")
     public String deleteProduct(int id) {
-//        String cacheKey = "Product";
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             cachedData.removeIf(entity -> entity.getId().equals(id));
@@ -113,23 +83,14 @@ public class ProductService {
 
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
-            cachedData.replaceAll(entity -> {
-                return entity.getId().equals(product.getId()) ? product : entity;
-//                if (entity.getId().equals(product.getId())) {
-//                    return product;
-//                } else {
-//                    return entity;
-//                }
-            });
+            cachedData.replaceAll(entity -> entity.getId().equals(product.getId()) ? product : entity);
             redisTemplate.opsForValue().set(cacheKey, cachedData, 1, TimeUnit.MINUTES);
         }
 
-
         Product existingProduct = productRepository.findById(product.getId()).orElse(null);
-//        existingProduct.setName(product.getName());
-//        existingProduct.setQuantity(product.getQuantity());
-//        existingProduct.setPrice(product.getPrice());
-//        hashOperations.put(hashReference, product.getId(), product);
+        existingProduct.setName(product.getName());
+        existingProduct.setQuantity(product.getQuantity());
+        existingProduct.setPrice(product.getPrice());
         return productRepository.save(existingProduct);
     }
 
