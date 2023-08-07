@@ -3,8 +3,6 @@ package com.example.springbootrediscache.service;
 import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +16,9 @@ public class ProductService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
-    private final String cacheKey = "Product";
+    private final static String cacheKey = "Product";
+    private final static TimeUnit timeUnit = TimeUnit.MINUTES;
+    private final static long timeout = 1;
 
     public Product saveProduct(Product product) {
         return productRepository.save(product);
@@ -34,7 +34,7 @@ public class ProductService {
             return cachedData;
         } else {
             List<Product> dataFromDatabase = productRepository.findAll();
-            redisTemplate.opsForValue().set(cacheKey, dataFromDatabase, 1 , TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, dataFromDatabase, timeout , timeUnit);
             return dataFromDatabase;
         }
     }
@@ -49,7 +49,7 @@ public class ProductService {
             Optional<Product> entityFromDatabase = productRepository.findById(id);
             entityFromDatabase.ifPresent(entity -> redisTemplate
                     .opsForValue()
-                    .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
+                    .set(cacheKey, List.of(entity), timeout, timeUnit));
             return entityFromDatabase;
         }
     }
@@ -63,7 +63,7 @@ public class ProductService {
         } else {
             Optional<Product> entityFromDatabase = Optional.ofNullable(productRepository.findByName(name));
             entityFromDatabase.ifPresent(entity -> redisTemplate.opsForValue()
-                    .set(cacheKey, List.of(entity), 1, TimeUnit.MINUTES));
+                    .set(cacheKey, List.of(entity), timeout, timeUnit));
             return entityFromDatabase;
         }
     }
@@ -72,7 +72,7 @@ public class ProductService {
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             cachedData.removeIf(entity -> entity.getId().equals(id));
-            redisTemplate.opsForValue().set(cacheKey, cachedData, 1, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, cachedData, timeout, timeUnit);
         }
         productRepository.deleteById(id);
         return "product removed id: " + id;
@@ -83,7 +83,7 @@ public class ProductService {
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             cachedData.replaceAll(entity -> entity.getId().equals(product.getId()) ? product : entity);
-            redisTemplate.opsForValue().set(cacheKey, cachedData, 1, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, cachedData, timeout, timeUnit);
         }
 
         Product existingProduct = productRepository.findById(product.getId()).orElse(null);
