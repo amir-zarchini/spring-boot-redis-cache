@@ -78,7 +78,6 @@ public class ProductService {
         return "product removed id: " + id;
     }
 
-    @CachePut(value="Product", key="#product.id", condition="#product.id!=null")
     public Product updateProduct(Product product) {
 
         List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
