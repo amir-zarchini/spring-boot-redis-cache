@@ -10,13 +10,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * this service wrote for config cache using RedisTemplate class
+ * and opsForValue method
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
-    private final static String cacheKey = "Product";
+    private final static String cacheKey = "product";
     private final static TimeUnit timeUnit = TimeUnit.MINUTES;
     private final static long timeout = 1;
 

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 
@@ -12,6 +13,7 @@ import java.io.Serializable;
 @Table(name = "products")
 @AllArgsConstructor
 @NoArgsConstructor
+//@RedisHash(timeToLive = 60L)
 public class Product implements Serializable {
 
     @Id

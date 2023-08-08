@@ -1,6 +1,7 @@
 package com.example.springbootrediscache.controller;
 
 import com.example.springbootrediscache.model.Product;
+import com.example.springbootrediscache.service.ProductCachingService;
 import com.example.springbootrediscache.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductController {
 
+    //private final ProductCachingService service;
     private final ProductService service;
+    //private final ProductOpsForHash service;
 
     @PostMapping("/addProduct")
     public Product addProduct(@RequestBody Product product) {
@@ -26,9 +29,19 @@ public class ProductController {
 
     @GetMapping("/products")
     public List<Product> findAllProducts()  {
-        System.out.println(service.getProducts());
+//        System.out.println(service.getProducts());
         return service.getProducts();
     }
+
+//    @GetMapping("/productById/{id}")
+//    public Product findProductById(@PathVariable int id) {
+//        return service.getProductById(id);
+//    }
+//
+//    @GetMapping("/product/{name}")
+//    public Product findProductByName(@PathVariable String name) {
+//        return service.getProductByName(name);
+//    }
 
     @GetMapping("/productById/{id}")
     public Optional<Product> findProductById(@PathVariable int id) {
