@@ -1,7 +1,6 @@
 package com.example.springbootrediscache.controller;
 
 import com.example.springbootrediscache.model.Product;
-import com.example.springbootrediscache.service.ProductCachingService;
 import com.example.springbootrediscache.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
