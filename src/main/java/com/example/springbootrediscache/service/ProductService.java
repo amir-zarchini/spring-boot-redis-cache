@@ -2,10 +2,15 @@ package com.example.springbootrediscache.service;
 
 import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -20,9 +25,9 @@ public class ProductService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
-    private final static String cacheKey = "product";
+    private final static String cacheKey = "Product";
     private final static TimeUnit timeUnit = TimeUnit.MINUTES;
-    private final static long timeout = 1;
+    private final static long timeout = 10;
 
     public Product saveProduct(Product product) {
         return productRepository.save(product);
@@ -33,7 +38,7 @@ public class ProductService {
     }
 
     public List<Product> getProducts() {
-        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
+        List<Product> cachedData = getCacheData(cacheKey);
         if (cachedData != null) {
             return cachedData;
         } else {
@@ -44,22 +49,40 @@ public class ProductService {
     }
 
     public Optional<Product> getProductById(int id) {
-        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedData != null) {
-            return cachedData.stream()
+        
+        List<Product> cachedDataWithId = getCacheData(cacheKey+id);
+        if (cachedDataWithId != null) {
+            return cachedDataWithId.stream()
                     .filter(entity -> entity.getId().equals(id))
                     .findFirst();
         } else {
-            Optional<Product> entityFromDatabase = productRepository.findById(id);
-            entityFromDatabase.ifPresent(entity -> redisTemplate
-                    .opsForValue()
-                    .set(cacheKey, List.of(entity), timeout, timeUnit));
-            return entityFromDatabase;
+            List<Product> cachedData = getCacheData(cacheKey);
+            if (cachedData != null) {
+                return cachedData.stream()
+                        .filter(entity -> entity.getId().equals(id))
+                        .findFirst();
+            } else {
+                Optional<Product> entityFromDatabase = productRepository.findById(id);
+                setToCache(entityFromDatabase, cacheKey+id);
+                return entityFromDatabase;
+            }
         }
     }
 
+    private void setToCache(Optional<Product> entityFromDatabase, String cacheKey) {
+        entityFromDatabase.ifPresent(entity -> redisTemplate
+                .opsForValue()
+                .set(cacheKey, List.of(entity), timeout, timeUnit));
+    }
+
+    private List<Product> getCacheData(String cacheKey) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue
+                (redisTemplate.opsForValue().get(cacheKey) , new TypeReference<>() {});
+    }
+
     public Optional<Product> getProductByName(String name) {
-        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
+        List<Product> cachedData = getCacheData(cacheKey);
         if (cachedData != null) {
             return cachedData.stream()
                     .filter(entity -> entity.getName().equals(name))
@@ -73,7 +96,7 @@ public class ProductService {
     }
 
     public String deleteProduct(int id) {
-        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
+        List<Product> cachedData = getCacheData(cacheKey);
         if (cachedData != null) {
             cachedData.removeIf(entity -> entity.getId().equals(id));
             redisTemplate.opsForValue().set(cacheKey, cachedData, timeout, timeUnit);
@@ -84,7 +107,7 @@ public class ProductService {
 
     public Product updateProduct(Product product) {
 
-        List<Product> cachedData = (List<Product>) redisTemplate.opsForValue().get(cacheKey);
+        List<Product> cachedData = getCacheData(cacheKey);
         if (cachedData != null) {
             cachedData.replaceAll(entity -> entity.getId().equals(product.getId()) ? product : entity);
             redisTemplate.opsForValue().set(cacheKey, cachedData, timeout, timeUnit);
@@ -96,5 +119,4 @@ public class ProductService {
         existingProduct.setPrice(product.getPrice());
         return productRepository.save(existingProduct);
     }
-
 }

@@ -2,13 +2,12 @@ package com.example.springbootrediscache.service;
 
 import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -16,11 +15,17 @@ import java.util.List;
  * and opsForHash method
  */
 @Service
-@RequiredArgsConstructor
 public class ProductOpsForHash {
 
     private final ProductRepository productRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final HashOperations<String, String, Object> hashOperations;
+
+    public ProductOpsForHash(RedisTemplate<String, Object> redisTemplate, ProductRepository productRepository) {
+        this.redisTemplate = redisTemplate;
+        this.hashOperations = redisTemplate.opsForHash();
+        this.productRepository = productRepository;
+    }
 
     public Product saveProduct(Product product) {
         return productRepository.save(product);
@@ -31,10 +36,21 @@ public class ProductOpsForHash {
     }
 
     public List<Product> getProducts() {
-        List<Product> productList = productRepository.findAll();
-        Collection<Object> ProductsId = fillProductsId(productList);
-        redisTemplate.opsForHash().multiGet("Products", ProductsId);
-        return productRepository.findAll();
+//        List<Product> productList = productRepository.findAll();
+//        Collection<Object> ProductsId = fillProductsId(productList);
+//        redisTemplate.opsForHash().multiGet("Products", ProductsId);
+        Map<String, Object> productMap = hashOperations.entries("products");
+        if (!productMap.isEmpty()) {
+            return productMap.values().stream()
+                    .map(obj -> (Product) obj)
+                    .collect(Collectors.toList());
+        } else {
+            List<Product> dataFromDatabase = productRepository.findAll();
+
+            productMap = (Map<String, Object>) dataFromDatabase;
+//            productMap = dataFromDatabase.stream().collect(Collectors.toMap());
+            return dataFromDatabase;
+        }
     }
 
     private Collection<Object> fillProductsId(List<Product> productList) {

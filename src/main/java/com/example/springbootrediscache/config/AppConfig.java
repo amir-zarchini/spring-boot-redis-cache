@@ -8,6 +8,7 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -50,8 +51,9 @@ public class AppConfig {
     public RedisTemplate<String, Object> redisTemplate(){
         RedisTemplate<String, Object> productRedisTemplate = new RedisTemplate<>();
         productRedisTemplate.setConnectionFactory(redisConnectionFactory);
-        productRedisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        productRedisTemplate.setHashValueSerializer(new StringRedisSerializer());
+        productRedisTemplate.setKeySerializer(new StringRedisSerializer());
+        productRedisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer(Object.class));
+        productRedisTemplate.afterPropertiesSet();
         return productRedisTemplate;
     }
 }
