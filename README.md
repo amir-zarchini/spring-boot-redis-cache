@@ -7,10 +7,6 @@ This repository provides an example of implementing Redis caching in a Spring Bo
 - [Introduction](#introduction)
 - [Setup](#setup)
 - [Usage](#usage)
-- [Caching Strategies](#caching-strategies)
-- [Customization](#customization)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 
