@@ -70,7 +70,7 @@ public class ProductService {
                 Optional<Product> entityFromDatabase = productRepository.findById(id);
 
                 // ذخیره در ردیس با key خاص ( برای واکشی فیلد خاص نیاز به واکشی کل دیتای product نباشد)
-                setToCache(entityFromDatabase, cacheKey+id);
+                setToCache(entityFromDatabase, cacheKey+ "::" +id);
 
                 return entityFromDatabase;
             }
