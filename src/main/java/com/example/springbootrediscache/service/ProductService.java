@@ -50,33 +50,47 @@ public class ProductService {
 
     public Optional<Product> getProductById(int id) {
         
+         /*
+           واکشی دیتا با id خاص از ردیس
+           (اگر key با این id موجود بود نیاز به واکشی key کل product نباشد)
+          */
         List<Product> cachedDataWithId = getCacheData(cacheKey+id);
+
         if (cachedDataWithId != null) {
             return cachedDataWithId.stream()
                     .filter(entity -> entity.getId().equals(id))
                     .findFirst();
         } else {
-            List<Product> cachedData = getCacheData(cacheKey);
+            List<Product> cachedData = getCacheData(cacheKey); // واکشی کل دیتای product
             if (cachedData != null) {
                 return cachedData.stream()
                         .filter(entity -> entity.getId().equals(id))
                         .findFirst();
             } else {
                 Optional<Product> entityFromDatabase = productRepository.findById(id);
+
+                // ذخیره در ردیس با key خاص ( برای واکشی فیلد خاص نیاز به واکشی کل دیتای product نباشد)
                 setToCache(entityFromDatabase, cacheKey+id);
+
                 return entityFromDatabase;
             }
         }
     }
 
+    /*
+    ذخیره دیتا در ردیس
+     */
     private void setToCache(Optional<Product> entityFromDatabase, String cacheKey) {
         entityFromDatabase.ifPresent(entity -> redisTemplate
                 .opsForValue()
                 .set(cacheKey, List.of(entity), timeout, timeUnit));
     }
 
+    /*
+    واکشی دیتا از ردیس
+     */
     private List<Product> getCacheData(String cacheKey) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper(); // به دلیل خطای عدم تبدیل LinkedHashMap به Product
         return objectMapper.convertValue
                 (redisTemplate.opsForValue().get(cacheKey) , new TypeReference<>() {});
     }
