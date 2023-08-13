@@ -45,20 +45,22 @@ This application provides endpoints for demonstrating caching behavior. The foll
 ###Maven Dependency
 
 ```xml
-<dependency>
-	<groupId>org.springframework.boot</groupId>
-	<artifactId>spring-boot-starter-data-redis</artifactId>
-</dependency>
+<dependencies>
+   <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+   </dependency>
 
-<dependency>
-	<groupId>redis.clients</groupId>
-	<artifactId>jedis</artifactId>
-</dependency>
+   <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+   </dependency>
 
-<dependency>
-            <groupId>io.lettuce</groupId>
-            <artifactId>lettuce-core</artifactId>
-</dependency>
+   <dependency>
+      <groupId>io.lettuce</groupId>
+      <artifactId>lettuce-core</artifactId>
+   </dependency>
+</dependencies>
 ```
 
 ### Redis Configuration
@@ -297,49 +299,50 @@ public class ProductService {
 @Service
 public class ProductOpsForHash {
 
-    private final ProductRepository productRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+   private final ProductRepository productRepository;
+   private final RedisTemplate<String, Object> redisTemplate;
 
-    public ProductOpsForHash(RedisTemplate<String, Object> redisTemplate, ProductRepository productRepository) {
-        this.redisTemplate = redisTemplate;
-        this.productRepository = productRepository;
-    }
+   public ProductOpsForHash(RedisTemplate<String, Object> redisTemplate, ProductRepository productRepository) {
+      this.redisTemplate = redisTemplate;
+      this.productRepository = productRepository;
+   }
 
-    public List<Product> getProducts() {
-        List<Product> cacheData = Collections.singletonList((Product) redisTemplate.opsForHash().values("product"));
-        if (!cacheData.isEmpty()) return cacheData;
-        else {
-            return productRepository.findAll();
-        }
-    }
+   public List<Product> getProducts() {
+      List<Product> cacheData = Collections.singletonList((Product) redisTemplate.opsForHash().values("product"));
+      if (!cacheData.isEmpty()) return cacheData;
+      else {
+         return productRepository.findAll();
+      }
+   }
 
-    public Product getProductById(int id) {
-        Product cacheData = (Product) redisTemplate.opsForHash().get("product", id);
-        if (cacheData != null) return cacheData;
-        return productRepository.findById(id).orElse(null);
-    }
+   public Product getProductById(int id) {
+      Product cacheData = (Product) redisTemplate.opsForHash().get("product", id);
+      if (cacheData != null) return cacheData;
+      return productRepository.findById(id).orElse(null);
+   }
 
-    public Product getProductByName(String name) {
-        return productRepository.findByName(name);
-    }
+   public Product getProductByName(String name) {
+      return productRepository.findByName(name);
+   }
 
 
-    @Transactional
-    public String deleteProduct(int id) {
-        redisTemplate.opsForHash().delete("Product",id);
-        productRepository.deleteById(id);
-        return "product removed id: " + id;
-    }
+   @Transactional
+   public String deleteProduct(int id) {
+      redisTemplate.opsForHash().delete("Product", id);
+      productRepository.deleteById(id);
+      return "product removed id: " + id;
+   }
 
-    @Transactional
-    public Product updateProduct(Product product) {
-        Product existingProduct = productRepository.findById(product.getId()).orElse(null);
-        existingProduct.setName(product.getName());
-        existingProduct.setQuantity(product.getQuantity());
-        existingProduct.setPrice(product.getPrice());
-        redisTemplate.opsForHash().put("Product" ,product.getId(),product);
-        return productRepository.save(existingProduct);
-    }
+   @Transactional
+   public Product updateProduct(Product product) {
+      Product existingProduct = productRepository.findById(product.getId()).orElse(null);
+      existingProduct.setName(product.getName());
+      existingProduct.setQuantity(product.getQuantity());
+      existingProduct.setPrice(product.getPrice());
+      redisTemplate.opsForHash().put("Product", product.getId(), product);
+      return productRepository.save(existingProduct);
+   }
+}
 ```
 
 ### application.properties
