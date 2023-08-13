@@ -43,7 +43,7 @@ This application provides endpoints for demonstrating caching behavior. The foll
 
 ## Getting Started
 
-###Maven Dependency
+### Maven Dependency
 
 ```xml
 <dependencies>
