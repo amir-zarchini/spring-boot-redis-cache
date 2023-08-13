@@ -44,7 +44,7 @@ This application provides endpoints for demonstrating caching behavior. The foll
 
 ###Maven Dependency
 
-```
+```xml
 <dependency>
 	<groupId>org.springframework.boot</groupId>
 	<artifactId>spring-boot-starter-data-redis</artifactId>
@@ -63,7 +63,7 @@ This application provides endpoints for demonstrating caching behavior. The foll
 
 ### Redis Configuration
 
-```
+```java
 @Configuration
 @RequiredArgsConstructor
 public class AppConfig {
@@ -96,7 +96,7 @@ Spring Boot Product Service Implementation will be like below class. I used 3 wa
 
 1. used by spring boot cache annotation:
 
-```
+```java
 @Service
 @AllArgsConstructor
 public class ProductCachingService {
@@ -180,7 +180,7 @@ public class ProductCachingService {
 
 2. used by opsForValue() method of RedisTemplate class:
 
-```
+```java
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -293,7 +293,7 @@ public class ProductService {
 
 3. used by opsForHash() method of RedisTemplate class:
 
-```
+```java
 @Service
 public class ProductOpsForHash {
 
@@ -344,7 +344,7 @@ public class ProductOpsForHash {
 
 ### application.properties
 
-```
+```properties
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.datasource.url=jdbc:mysql://localhost:3306/rediscachetest
 spring.datasource.username=root
