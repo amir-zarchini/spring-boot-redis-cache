@@ -2,12 +2,14 @@ package com.example.springbootrediscache.service;
 
 import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -15,15 +17,14 @@ import java.util.stream.Collectors;
  * and opsForHash method
  */
 @Service
-public class ProductOpsForHash {
+@ConditionalOnProperty(name="service.choice",havingValue = "ProductOpsForHash")
+public class ProductOpsForHash implements ProductService{
 
     private final ProductRepository productRepository;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final HashOperations<String, String, Object> hashOperations;
 
     public ProductOpsForHash(RedisTemplate<String, Object> redisTemplate, ProductRepository productRepository) {
         this.redisTemplate = redisTemplate;
-        this.hashOperations = redisTemplate.opsForHash();
         this.productRepository = productRepository;
     }
 
@@ -36,53 +37,38 @@ public class ProductOpsForHash {
     }
 
     public List<Product> getProducts() {
-//        List<Product> productList = productRepository.findAll();
-//        Collection<Object> ProductsId = fillProductsId(productList);
-//        redisTemplate.opsForHash().multiGet("Products", ProductsId);
-        Map<String, Object> productMap = hashOperations.entries("products");
-        if (!productMap.isEmpty()) {
-            return productMap.values().stream()
-                    .map(obj -> (Product) obj)
-                    .collect(Collectors.toList());
-        } else {
-            List<Product> dataFromDatabase = productRepository.findAll();
-
-            productMap = (Map<String, Object>) dataFromDatabase;
-//            productMap = dataFromDatabase.stream().collect(Collectors.toMap());
-            return dataFromDatabase;
+        List<Product> cacheData = Collections.singletonList((Product) redisTemplate.opsForHash().values("product"));
+        if (!cacheData.isEmpty()) return cacheData;
+        else {
+            return productRepository.findAll();
         }
     }
 
-    private Collection<Object> fillProductsId(List<Product> productList) {
-        Collection<Object> productId = new ArrayList<>();
-        productList.forEach(product -> {
-            productId.add(product.getId().toString());
-        });
-        return productId;
+    public Optional<Product> getProductById(int id) {
+        Product cacheData = (Product) redisTemplate.opsForHash().get("product", id);
+        if (cacheData != null) return Optional.of(cacheData);
+        return productRepository.findById(id);
     }
 
-
-    public Product getProductById(int id) {
-        return productRepository.findById(id).orElse(null);
-    }
-
-    public Product getProductByName(String name) {
+    public Optional<Product> getProductByName(String name) {
         return productRepository.findByName(name);
     }
 
 
+    @Transactional
     public String deleteProduct(int id) {
+        redisTemplate.opsForHash().delete("Product",id);
         productRepository.deleteById(id);
         return "product removed id: " + id;
     }
 
-
+    @Transactional
     public Product updateProduct(Product product) {
         Product existingProduct = productRepository.findById(product.getId()).orElse(null);
         existingProduct.setName(product.getName());
         existingProduct.setQuantity(product.getQuantity());
         existingProduct.setPrice(product.getPrice());
-        redisTemplate.opsForHash().put("Products" ,product.getId(),product);
+        redisTemplate.opsForHash().put("Product" ,product.getId(),product);
         return productRepository.save(existingProduct);
     }
 }

@@ -45,7 +45,7 @@ public class AppConfig {
     }
 
     /*
-    کانفیگ ردیس برای ProductService
+    کانفیگ ردیس برای ProductServiceImpl
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(){

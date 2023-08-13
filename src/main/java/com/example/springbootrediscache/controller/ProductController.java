@@ -1,7 +1,6 @@
 package com.example.springbootrediscache.controller;
 
 import com.example.springbootrediscache.model.Product;
-import com.example.springbootrediscache.service.ProductOpsForHash;
 import com.example.springbootrediscache.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +12,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductController {
 
-    //private final ProductCachingService service;
     private final ProductService service;
-    //private final ProductOpsForHash service;
 
     @PostMapping("/addProduct")
     public Product addProduct(@RequestBody Product product) {

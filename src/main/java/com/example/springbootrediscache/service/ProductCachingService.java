@@ -3,6 +3,7 @@ package com.example.springbootrediscache.service;
 import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -10,13 +11,15 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * cached config by cache annotation
  */
 @Service
 @AllArgsConstructor
-public class ProductCachingService {
+@ConditionalOnProperty(name="service.choice",havingValue = "ProductCachingService")
+public class ProductCachingService implements ProductService{
 
     private final ProductRepository productRepository;
 
@@ -40,11 +43,11 @@ public class ProductCachingService {
     key --> Product::#id جستجو با
      */
     @Cacheable(value="Product", key="#id")
-    public Product getProductById(int id) {
-        return productRepository.findById(id).orElse(null);
+    public Optional<Product> getProductById(int id) {
+        return productRepository.findById(id);
     }
 
-    public Product getProductByName(String name) {
+    public Optional<Product> getProductByName(String name) {
         return productRepository.findByName(name);
     }
 

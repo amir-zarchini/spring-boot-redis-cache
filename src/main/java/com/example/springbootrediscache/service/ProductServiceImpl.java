@@ -4,13 +4,11 @@ import com.example.springbootrediscache.model.Product;
 import com.example.springbootrediscache.repository.ProductRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +19,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+@ConditionalOnProperty(name="service.choice",havingValue = "ProductServiceImpl")
+public class ProductServiceImpl implements ProductService{
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
@@ -102,7 +101,7 @@ public class ProductService {
                     .filter(entity -> entity.getName().equals(name))
                     .findFirst();
         } else {
-            Optional<Product> entityFromDatabase = Optional.ofNullable(productRepository.findByName(name));
+            Optional<Product> entityFromDatabase = productRepository.findByName(name);
             entityFromDatabase.ifPresent(entity -> redisTemplate.opsForValue()
                     .set(cacheKey, List.of(entity), timeout, timeUnit));
             return entityFromDatabase;
